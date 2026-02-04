@@ -27,24 +27,29 @@ public class HelloController implements Initializable {
     private Label label_Init;
     @FXML
     private ComboBox comboSelection;
+
+
     private final double taux_Euro_Livre = 0.86;
     private final double taux_Euro_Dollar = 1.179;
     private final double taux_Euro_Yen = 184.8;
-    private ArrayList<ConversionDevise> conversionDevise;
+    private final ArrayList<ConversionDevise> conversionDevise = new ArrayList<>();
     private final DecimalFormat df = new DecimalFormat("0.0000");
     public RotateTransition rotate;
     private double valeur_Final;
     private double valeur_Conversion;
     private double valeur_Init;
 
+    public HelloController() {
+    }
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-//        comboSelection();
         fabriqueDonnees();
-        label_Init.setText("Euro");
-        label_Final.setText("USD");
+        comboSelection.setOnAction(event -> comboSelection(event));
+
+        /*
         comboSelection.setOnAction((e) -> {
+
             switch (comboSelection.getSelectionModel().getSelectedIndex()) {
                 case 0:
                     buttonConvertion.setOnAction(event -> {
@@ -102,7 +107,8 @@ public class HelloController implements Initializable {
                     });
                     break;
             }
-        });
+        });*/
+
     }
 
     public void alerteFormat(String champ) {
@@ -119,82 +125,50 @@ public class HelloController implements Initializable {
         rotate.play();
     }
 
-    public void conveurousd(double nombre) {
-        label_Init.setText("Euro");
-        label_Final.setText("USD");
-        String nombreSortie = df.format(nombre * 1.179);
-        textField_Final.setText(nombreSortie);
-    }
-
-    public void convusdeuro(double nombre) {
-        label_Init.setText("USD");
-        label_Final.setText("Euro");
-        String nombreSortie = df.format(nombre / 1.179);
-        textField_Final.setText(nombreSortie);
-    }
-
-    public void conveuroyen(double nombre) {
-        label_Init.setText("Euro");
-        label_Final.setText("Yen");
-        String nombreSortie = df.format(nombre * 184.87);
-        textField_Final.setText(nombreSortie);
-    }
-
-    public void convyeneuro(double nombre) {
-        label_Init.setText("Yen");
-        label_Final.setText("Euro");
-        String nombreSortie = df.format(nombre / 184.87);
-        textField_Final.setText(nombreSortie);
-    }
-
-    public void conveurolivre(double nombre) {
-        label_Init.setText("Euro");
-        label_Final.setText("Livre Sterling");
-        String nombreSortie = df.format(nombre * 0.86);
-        textField_Final.setText(nombreSortie);
-    }
-
-    public void convlivreeuro(double nombre) {
-        label_Init.setText("Livre Sterling");
-        label_Final.setText("Euro");
-        String nombreSortie = df.format(nombre / 0.86);
-        textField_Final.setText(nombreSortie);
-    }
-
-    public void comboSelection() {
-        ArrayList lista = new ArrayList();
-        lista.add("Euro -> USD");
-        lista.add("USD -> Euro");
-        lista.add("Euro -> Yen");
-        lista.add("Yen -> Euro");
-        lista.add("Euro -> Livre Sterling");
-        lista.add("Livre Sterling -> Euro");
-        lista.forEach(event -> {
-            comboSelection.getItems().add(event);
-        });
-    }
-
     public void initConvertion(ConversionDevise cd) {
+        label_Init.setText(cd.getSource());
+        label_Final.setText(cd.getCible());
+        valeur_Conversion = cd.getTaux();
 
     }
 
     private void convertion() {
+        try {
+            valeur_Init = Double.parseDouble(textField_Init.getText().replace(",", "."));
+            if (label_Init.getText().equals("Euro")){
+                valeur_Final = valeur_Init * valeur_Conversion;
+                textField_Final.setText(df.format(valeur_Final));
+            } else {
+                valeur_Final = valeur_Init / valeur_Conversion;
+                textField_Final.setText(df.format(valeur_Final));
+            }
+
+        } catch (NumberFormatException ex) {
+            alerteFormat(ex.getMessage());
+        }
 
     }
 
     private void comboSelection(Event event) {
 
+        for (ConversionDevise cd : conversionDevise) {
+            if (cd.getPrompt().equals(comboSelection.getValue().toString())) {
+                initConvertion(cd);
+            }
+        }
+
+        buttonConvertion.setOnAction(e -> convertion());
+
     }
 
     private void fabriqueDonnees() {
-        conversionDevise = new ArrayList();
-        conversionDevise.add(new ConversionDevise("Euro -> USD", "Euro", "USD", 1.179));
-        conversionDevise.add(new ConversionDevise("USD -> Euro", "USD", "Euro", 1.179));
-        conversionDevise.add(new ConversionDevise("Euro -> Yen", "Euro", "Yen", 184.87));
-        conversionDevise.add(new ConversionDevise("Yen -> Euro", "Yen", "Euro", 184.87));
-        conversionDevise.add(new ConversionDevise("Euro -> Livre Sterling", "Euro", "Livre Sterling", 0.86));
-        conversionDevise.add(new ConversionDevise("Livre Sterling -> Euro", "Livre Sterling", "Euro", 0.86));
-        conversionDevise.forEach(conv -> {
+        conversionDevise.add(new ConversionDevise("Euro -> USD", "Euro", "USD", taux_Euro_Dollar));
+        conversionDevise.add(new ConversionDevise("USD -> Euro", "USD", "Euro", taux_Euro_Dollar));
+        conversionDevise.add(new ConversionDevise("Euro -> Yen", "Euro", "Yen", taux_Euro_Yen));
+        conversionDevise.add(new ConversionDevise("Yen -> Euro", "Yen", "Euro", taux_Euro_Yen));
+        conversionDevise.add(new ConversionDevise("Euro -> Livre Sterling", "Euro", "Livre Sterling", taux_Euro_Livre));
+        conversionDevise.add(new ConversionDevise("Livre Sterling -> Euro", "Livre Sterling", "Euro", taux_Euro_Livre));
+        conversionDevise.forEach( conv-> {
             comboSelection.getItems().add(conv.getPrompt());
         });
 
